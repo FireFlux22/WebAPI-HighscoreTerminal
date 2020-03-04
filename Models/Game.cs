@@ -11,6 +11,17 @@ namespace HighscoreTerminal.Models
             ImageUrl = imageUrl;
         }
 
+        public Game(int id, string title, string description, Uri imageUrl)
+            : this(title, description, imageUrl)
+        {
+            Id = id;
+        }
+
+        public Game()
+        {
+
+        }
+
         public int Id { get; set; }
         public string Title { get; set; }
         public string Description { get; set; }

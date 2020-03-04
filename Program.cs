@@ -2,11 +2,8 @@
 using System.Net.Http;
 using static System.Console;
 using System.Net.Http.Headers;
-using System.Collections;
 using HighscoreTerminal.Models;
-using System.Linq;
 using Newtonsoft.Json;
-using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 
@@ -15,8 +12,8 @@ namespace HighscoreTerminal
 
 
 
-//    Install-Package Microsoft.Extensions.Http
-//    Install-Package Newtonsoft.Json 
+    //    Install-Package Microsoft.Extensions.Http
+    //    Install-Package Newtonsoft.Json 
     class Program
     {
 
@@ -55,6 +52,7 @@ namespace HighscoreTerminal
                         WriteLine("1. List games");
                         WriteLine("2. Add game");
                         WriteLine("3. Delete game");
+                        WriteLine("4. Update game (PUT)");
 
                         keyPressed = ReadKey(true);
 
@@ -62,15 +60,27 @@ namespace HighscoreTerminal
 
                         switch (keyPressed.Key)
                         {
+                            case ConsoleKey.D1:
+
+                                ListGames();
+
+                                break;
+
                             case ConsoleKey.D2:
 
-                                ShowAddGameForm();
+                                ShowAddGame();
 
                                 break;
 
                             case ConsoleKey.D3:
 
                                 DeleteGame();
+
+                                break;
+
+                            case ConsoleKey.D4:
+
+                                UpdateGameUsingPUT();
 
                                 break;
                         }
@@ -113,6 +123,108 @@ namespace HighscoreTerminal
             }
         }
 
+        private static void ListGames()
+        {
+            throw new NotImplementedException();
+        }
+
+        private static void UpdateGameUsingPUT()
+        {
+
+            Write("Select game (ID): ");
+            var gameId = ReadLine();
+
+            Clear();
+
+            var response = httpClient.GetAsync($"/api/games/{gameId}").Result;
+
+            if (!response.IsSuccessStatusCode)
+            {
+                WriteLine("Game not found");
+                Thread.Sleep(2000);
+                return;
+            }
+            else
+            {
+                var stringContent = response.Content.ReadAsStringAsync().Result;  
+
+                // lägg till tom ctor
+                var game = JsonConvert.DeserializeObject<Game>(stringContent);
+
+                WriteLine("ID: " + game.Id);
+                WriteLine("Title: " + game.Title);
+                WriteLine("Description: " + game.Description);
+                WriteLine("Image URL: " + game.ImageUrl);
+                WriteLine("-------------------------------------------------------------");
+
+                WriteLine("ID: " + game.Id);
+
+                Write("Title: ");
+                var title = ReadLine();
+
+                Write("Description: ");
+                var description = ReadLine();
+
+                Write("Image URL: ");
+                var imageUrl = new Uri(ReadLine());
+
+                bool Exit = false;
+
+                while (!Exit)
+                {
+                    WriteLine();
+
+                    WriteLine("Is this correct? (Y)es or (N)o \n(L)eave without saving");
+
+                    ConsoleKeyInfo menuChoice = ReadKey(true);
+
+                    Clear();
+
+                    switch (menuChoice.Key)
+                    {
+                        case ConsoleKey.Y:
+
+                            // glöm inte att göra en ny Game constructor som tar ID!
+                            // vi sätter aldrig Id sjäv men måste ha med det
+                            var updatedGame = new Game(game.Id, title, description, imageUrl);
+
+                            var serializedUpdatedGame = JsonConvert.SerializeObject(updatedGame);
+
+                            var content = new StringContent(serializedUpdatedGame, Encoding.UTF8, "application/json");
+
+                            response = httpClient.PutAsync($"/api/games/{game.Id}", content).Result;
+
+                            Clear();
+
+                            if (response.IsSuccessStatusCode)
+                            {
+                                WriteLine("Game updated");
+                            }
+                            else
+                            {
+                                WriteLine("Failed to update game");
+                            }
+
+                            Thread.Sleep(2000);
+
+                            Exit = true;
+
+                            break;
+
+                        case ConsoleKey.N:
+                            break;
+
+                        case ConsoleKey.L:
+                            Exit = true;
+                            break;
+
+                        default:
+                            break;
+                    }
+                }
+            }
+        }
+
         private static void DeleteGame()
         {
             Write("ID: ");
@@ -136,7 +248,7 @@ namespace HighscoreTerminal
             Thread.Sleep(2000);
         }
 
-        private static void ShowAddGameForm()
+        private static void ShowAddGame()
         {
             Write("Title: ");
             var title = ReadLine();
@@ -156,9 +268,7 @@ namespace HighscoreTerminal
                 Encoding.UTF8,  
                 "application/json");
 
-            var response = httpClient.PostAsync("games", data) // skicka till OnPost metoden i Controllern
-                .GetAwaiter()
-                .GetResult();
+            var response = httpClient.PostAsync("games", data).Result; // skicka till OnPost metoden i Controllern
 
             Clear();
 
