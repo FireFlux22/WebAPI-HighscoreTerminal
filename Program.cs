@@ -6,12 +6,11 @@ using HighscoreTerminal.Models;
 using Newtonsoft.Json;
 using System.Text;
 using System.Threading;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace HighscoreTerminal
 {
-
-
-
     //    Install-Package Microsoft.Extensions.Http
     //    Install-Package Newtonsoft.Json 
     class Program
@@ -28,6 +27,10 @@ namespace HighscoreTerminal
             httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
            // httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/xml"));
            // Om vi vill acceptera tex XML
+
+            // Lägg till för åtkomstkontroll
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxOTJhMzdhNi1lYjJlLTRkOWEtODA1Ny01ZGU4NTcxZjYwOTEiLCJlbWFpbCI6ImpvaG4uZG9lQG5vbWFpbC5jb20iLCJuYmYiOjE1ODM4NDI4MzMsImV4cCI6MTU4Mzg0MzQzMywiaWF0IjoxNTgzODQyODMzfQ.OTC5ETUqwISYrFldcG3A68tNLW27cfHJQnMZPGlRgOo");
+
             httpClient.DefaultRequestHeaders.Add("User-Agent", "HighscoreTerminal");
             httpClient.BaseAddress = new Uri("https://localhost:5001/api/");
 
@@ -85,29 +88,6 @@ namespace HighscoreTerminal
                                 break;
                         }
 
-                        //// Make a HTTP GET /api/games request
-                        //var response = httpClient.GetAsync("games")
-                        //    .GetAwaiter()
-                        //    .GetResult();
-
-                        //var games = Enumerable.Empty<Game>();
-
-                        //if (response.IsSuccessStatusCode)
-                        //{
-                        //    var stringContent = response.Content.ReadAsStringAsync()
-                        //        .GetAwaiter()
-                        //        .GetResult();  // som Promises (JS) fast i C#
-
-                        //    games = JsonConvert.DeserializeObject<IEnumerable<Game>>(stringContent);
-                        //}
-
-                        //foreach(var game in games)
-                        //{
-                        //    WriteLine(game.Title);
-                        //}
-
-                        ReadKey(true);
-
                         break;
 
                     case ConsoleKey.D2:
@@ -125,7 +105,32 @@ namespace HighscoreTerminal
 
         private static void ListGames()
         {
-            throw new NotImplementedException();
+            // Make a HTTP GET /api/games request
+            var response = httpClient.GetAsync("games")
+                .GetAwaiter()
+                .GetResult();
+
+            var games = Enumerable.Empty<Game>();
+
+            if (response.IsSuccessStatusCode)
+            {
+                var stringContent = response.Content.ReadAsStringAsync()
+                    .GetAwaiter()
+                    .GetResult();  // som Promises (JS) fast i C#
+
+                games = JsonConvert.DeserializeObject<IEnumerable<Game>>(stringContent);
+
+                foreach (var game in games)
+                {
+                    WriteLine(game.Title);
+                }
+            }
+            else
+            {
+                WriteLine("Failed to fetch games...");
+            }
+
+            ReadKey(true);
         }
 
         private static void UpdateGameUsingPUT()
